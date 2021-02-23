@@ -1,0 +1,53 @@
+version: "3.7"
+services:
+
+  ## PHP-FPM Container ############
+  php-fpm:
+    build:
+      context: ./docker/php-fpm
+      dockerfile: Dockerfile
+    image: php-fpm
+    container_name: core-php-fpm
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - core-ui-network
+
+  ## NGINX Container #############
+  nginx:
+    image: nginx:1.19-alpine
+    container_name: core-nginx
+    restart: unless-stopped
+    ports:
+      - 80:80
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx:/etc/nginx/conf.d
+    networks:
+      - core-ui-network
+
+  # MySQL Container
+  mysql:
+    image: mysql:8.0
+    container_name: core-mysql
+    volumes:
+      - core-ui-db:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=core
+      - MYSQL_DATABASE=core
+      - MYSQL_USER=core
+      - MYSQL_PASSWORD=core
+    networks:
+      - core-ui-network
+
+networks:
+  core-ui-network:
+    driver: bridge
+
+volumes:
+  core-ui-db:
+    driver: local
